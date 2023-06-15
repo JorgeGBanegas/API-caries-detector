@@ -18,10 +18,11 @@ endpoint_name = aws_setting.endpoint_sagemaker
 
 def _load_image(image_file):
     image_stream = io.BytesIO(image_file)
-    image = Image.open(image_stream)
-    image_array = np.array(image)
-    image_array = np.expand_dims(image_array, axis=0)
-    return image_array
+    img = Image.open(image_stream)
+    # img = img.resize((224, 224))
+    img = np.array(img) / 255.0
+    img = np.expand_dims(img, axis=0)
+    return img
 
 
 def _predict(image):
@@ -43,10 +44,10 @@ class AnalysisService:
     def analyze_image(image_file):
         image = _load_image(image_file)
         prediction = _predict(image)
-        print(prediction)
         probability = prediction['predictions'][0][0]
-        label = "Caries" if probability > 0.5 else "No Caries"
-        percentage_probability = probability * 100
+        result = 1 - probability
+        label = "Caries" if result > 0.5 else "Sin Caries"
+        percentage_probability = result * 100
         # limit to 2 decimal places
         percentage_probability = round(percentage_probability, 2)
         return label, percentage_probability
